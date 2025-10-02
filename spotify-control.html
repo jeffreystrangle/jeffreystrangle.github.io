@@ -6,6 +6,7 @@
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         button { padding: 10px 20px; margin: 5px; font-size: 16px; }
         .status { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .now-playing { background: #e0e0ff; padding: 15px; margin: 10px 0; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -18,9 +19,10 @@
         <button onclick="pause()">Pause</button>
         <button onclick="previous()">Previous</button>
         <button onclick="next()">Next</button>
+        <button onclick="restart()">Restart Track</button>
     </div>
 
-    <div id="nowPlaying"></div>
+    <div class="now-playing" id="nowPlaying">Fetching current track...</div>
 
     <script>
         const PI_BASE_URL = 'http://192.168.5.12:5000';
@@ -33,16 +35,32 @@
                 updateNowPlaying();
             } catch (error) {
                 document.getElementById('status').textContent = `Error: ${error.message}`;
+                console.error('API Error:', error);
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${PI_BASE_URL}/now_playing`);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                const text = await response.text();
+                console.log('Response text:', text);
+                return text;
+            } catch (error) {
+                console.error('Full error:', error);
+                throw error;
             }
         }
 
         async function updateNowPlaying() {
             try {
-                const response = await fetch(`${PI_BASE_URL}/now_playing`);
-                const text = await response.text();
+                const text = await testConnection();
                 document.getElementById('nowPlaying').textContent = `Now Playing: ${text}`;
+                document.getElementById('status').textContent = 'Connected successfully!';
             } catch (error) {
                 document.getElementById('nowPlaying').textContent = 'Could not fetch current track';
+                document.getElementById('status').textContent = `Error: ${error.message}. Make sure your Pi is running and on the same network.`;
             }
         }
 
@@ -50,6 +68,7 @@
         function pause() { callEndpoint('/pause'); }
         function previous() { callEndpoint('/previous'); }
         function next() { callEndpoint('/next'); }
+        function restart() { callEndpoint('/restart'); }
 
         // Load initial state
         updateNowPlaying();
