@@ -7,14 +7,22 @@
         button { padding: 10px 20px; margin: 5px; font-size: 16px; }
         .status { background: #f0f0f0; padding: 10px; margin: 10px 0; }
         .now-playing { background: #e0e0ff; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .auth-section { background: #fff0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
     </style>
 </head>
 <body>
     <h1>Spotify Controller</h1>
     
-    <div class="status" id="status">Loading...</div>
+    <div class="auth-section">
+        <h3>First: Authenticate the Pi</h3>
+        <button onclick="authenticatePi()">Click to Authenticate Pi with Spotify</button>
+        <p><small>This will open a new tab for Spotify authentication</small></p>
+    </div>
+    
+    <div class="status" id="status">Click the authentication button above first</div>
     
     <div>
+        <h3>Playback Controls</h3>
         <button onclick="play()">Play</button>
         <button onclick="pause()">Pause</button>
         <button onclick="previous()">Previous</button>
@@ -22,10 +30,16 @@
         <button onclick="restart()">Restart Track</button>
     </div>
 
-    <div class="now-playing" id="nowPlaying">Fetching current track...</div>
+    <div class="now-playing" id="nowPlaying">Authenticate first to see current track</div>
 
     <script>
         const PI_BASE_URL = 'http://192.168.5.12:5000';
+        
+        function authenticatePi() {
+            // Open the auth page in a new window
+            window.open(`${PI_BASE_URL}/auth`, '_blank');
+            document.getElementById('status').textContent = 'Authentication window opened. Complete the Spotify login, then refresh this page.';
+        }
         
         async function callEndpoint(endpoint) {
             try {
@@ -39,23 +53,10 @@
             }
         }
 
-        async function testConnection() {
-            try {
-                const response = await fetch(`${PI_BASE_URL}/now_playing`);
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                const text = await response.text();
-                console.log('Response text:', text);
-                return text;
-            } catch (error) {
-                console.error('Full error:', error);
-                throw error;
-            }
-        }
-
         async function updateNowPlaying() {
             try {
-                const text = await testConnection();
+                const response = await fetch(`${PI_BASE_URL}/now_playing`);
+                const text = await response.text();
                 document.getElementById('nowPlaying').textContent = `Now Playing: ${text}`;
                 document.getElementById('status').textContent = 'Connected successfully!';
             } catch (error) {
@@ -72,7 +73,7 @@
 
         // Load initial state
         updateNowPlaying();
-        setInterval(updateNowPlaying, 5000); // Update every 5 seconds
+        setInterval(updateNowPlaying, 5000);
     </script>
 </body>
 </html>
