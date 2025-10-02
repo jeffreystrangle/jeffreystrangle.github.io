@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spotify Controller</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+        .status { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Spotify Controller</h1>
+    
+    <div class="status" id="status">Loading...</div>
+    
+    <div>
+        <button onclick="play()">Play</button>
+        <button onclick="pause()">Pause</button>
+        <button onclick="previous()">Previous</button>
+        <button onclick="next()">Next</button>
+    </div>
+
+    <div id="nowPlaying"></div>
+
+    <script>
+        const PI_BASE_URL = 'http://192.168.5.12:5000';
+        
+        async function callEndpoint(endpoint) {
+            try {
+                const response = await fetch(`${PI_BASE_URL}${endpoint}`);
+                const text = await response.text();
+                document.getElementById('status').textContent = `Success: ${text}`;
+                updateNowPlaying();
+            } catch (error) {
+                document.getElementById('status').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function updateNowPlaying() {
+            try {
+                const response = await fetch(`${PI_BASE_URL}/now_playing`);
+                const text = await response.text();
+                document.getElementById('nowPlaying').textContent = `Now Playing: ${text}`;
+            } catch (error) {
+                document.getElementById('nowPlaying').textContent = 'Could not fetch current track';
+            }
+        }
+
+        function play() { callEndpoint('/play'); }
+        function pause() { callEndpoint('/pause'); }
+        function previous() { callEndpoint('/previous'); }
+        function next() { callEndpoint('/next'); }
+
+        // Load initial state
+        updateNowPlaying();
+        setInterval(updateNowPlaying, 5000); // Update every 5 seconds
+    </script>
+</body>
+</html>
